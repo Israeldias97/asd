@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Montagem de Equipamento</title>
+    <link rel="stylesheet" href="index.css">
+
+</head>
+<body>
+<div class="container" id="id_loginPage">
+    <h1>Login</h1>
+    <form onsubmit="return login(event)">
+        <label for="name">Nome:</label>
+        <input type="text" id="id_name"  required>
+        
+        <label for="email">Email:</label>
+        <input type="email" id="id_email" required>
+
+        <label for="password">Senha:</label>
+        <input type="password" id="id_password" required>
+
+        <button type="submit">Logar</button>
+    </form>
+</div>
+
+
+<div class="container hidden" id="equipmentPage">
+    <h2>Escolha um Equipamento</h2>
+    <div class="image-container">
+        <div onclick="chooseEquipment('notebook')">
+            <img src="notebook.png" alt="Notebook">
+            <p>Notebook</p>
+        </div>
+        <div onclick="chooseEquipment('desktop')">
+            <img src="Desktop-PC.png" alt="Desktop">
+            <p>Desktop</p>
+        </div>
+    </div>
+</div>
+
+
+<div class="container hidden" id="buildPage">
+    <h2>Monte seu <span id="equipmentType"></span></h2>
+    
+    <label for="cpu">Escolha a CPU:</label>
+    <select id="cpu"></select>
+
+    <label for="memory">Escolha a Memória:</label>
+    <select id="memory"></select>
+
+    <label for="storage">Escolha o HD/SSD:</label>
+    <select id="storage"></select>
+
+    <label for="os">Escolha o Sistema Operacional:</label>
+    <select id="os"></select>
+
+    <div id="monitorSection" class="hidden">
+        <label for="monitor">Escolha o Monitor:</label>
+        <select id="monitor"></select>
+    </div>
+
+    <button onclick="finalize()">Finalizar Montagem</button>
+</div>
+
+
+<div class="container hidden" id="summaryPage">
+    <h2>Resumo da Montagem</h2>
+    <p id="summary"></p>
+    <p id="total"></p>
+</div>
+
+<script>
+    let equipmentType = '';
+    const notebookOptions = {
+        cpu: [
+            { name: 'Intel i5-1135G7', price: 1500 },
+            { name: 'AMD Ryzen 5 5500U', price: 1400 },
+            { name: 'Intel i7-1165G7', price: 2000 },
+            { name: 'AMD Ryzen 7 5700U', price: 1800 }
+        ],
+        memory: [
+            { name: '8GB DDR4', price: 400 },
+            { name: '16GB DDR4', price: 800 },
+            { name: '32GB DDR4', price: 1500 },
+            { name: '64GB DDR4', price: 3000 }
+        ],
+        storage: [
+            { name: 'SSD 256GB', price: 300 },
+            { name: 'SSD 512GB', price: 600 },
+            { name: 'HDD 1TB', price: 200 },
+            { name: 'HDD 2TB', price: 400 }
+        ],
+        os: [
+            { name: 'Windows 10', price: 500 },
+            { name: 'Windows 11', price: 600 }
+        ]
+    };
+
+    const desktopOptions = {
+        ...notebookOptions,
+        monitor: [
+            { name: 'Monitor 24"', price: 800 },
+            { name: 'Monitor 27"', price: 1000 },
+            { name: 'Monitor 32"', price: 1500 },
+            { name: 'Monitor UltraWide', price: 2000 }
+        ]
+    };
+
+    function login(event) {
+        event.preventDefault();
+        document.getElementById('loginPage').classList.add('hidden');
+        document.getElementById('equipmentPage').classList.remove('hidden');
+    }
+
+    function chooseEquipment(type) {
+        equipmentType = type;
+        document.getElementById('equipmentType').innerText = type === 'notebook' ? 'Notebook' : 'Desktop';
+        document.getElementById('equipmentPage').classList.add('hidden');
+        document.getElementById('buildPage').classList.remove('hidden');
+
+        populateOptions(type);
+    }
+
+    function populateOptions(type) {
+        const options = type === 'notebook' ? notebookOptions : desktopOptions;
+        populateSelect('cpu', options.cpu);
+        populateSelect('memory', options.memory);
+        populateSelect('storage', options.storage);
+        populateSelect('os', options.os);
+
+        if (type === 'desktop') {
+            document.getElementById('monitorSection').classList.remove('hidden');
+            populateSelect('monitor', options.monitor);
+        } else {
+            document.getElementById('monitorSection').classList.add('hidden');
+        }
+    }
+
+    function populateSelect(id, options) {
+        const select = document.getElementById(id);
+        select.innerHTML = '';
+        options.forEach(option => {
+            const opt = document.createElement('option');
+            opt.value = option.price;
+            opt.textContent = `${option.name} - R$${option.price}`;
+            select.appendChild(opt);
+        });
+    }
+
+    function finalize() {
+        const name = document.getElementById('name').value;
+        const cpu = document.getElementById('cpu').selectedOptions[0].text;
+        const memory = document.getElementById('memory').selectedOptions[0].text;
+        const storage = document.getElementById('storage').selectedOptions[0].text;
+        const os = document.getElementById('os').selectedOptions[0].text;
+
+        let monitor = '';
+        if (equipmentType === 'desktop') {
+            monitor = document.getElementById('monitor').selectedOptions[0].text;
+        }
+
+        const totalPrice = calculateTotal();
+        const summary = `${name}, você montou um ${equipmentType} com as seguintes especificações:<br>
+            CPU: ${cpu}<br>
+            Memória: ${memory}<br>
+            Armazenamento: ${storage}<br>
+            Sistema Operacional: ${os}<br>
+            ${monitor ? 'Monitor: ' + monitor + '<br>' : ''}
+        `;
+
+        document.getElementById('summary').innerHTML = summary;
+        document.getElementById('total').innerHTML = `Preço total: R$${totalPrice}`;
+
+        document.getElementById('buildPage').classList.add('hidden');
+        document.getElementById('summaryPage').classList.remove('hidden');
+    }
+
+    function calculateTotal() {
+        const cpuPrice = parseFloat(document.getElementById('cpu').value);
+        const memoryPrice = parseFloat(document.getElementById('memory').value);
+        const storagePrice = parseFloat(document.getElementById('storage').value);
+        const osPrice = parseFloat(document.getElementById('os').value);
+        let monitorPrice = 0;
+
+        if (equipmentType === 'desktop') {
+            monitorPrice = parseFloat(document.getElementById('monitor').value);
+        }
+
+        return cpuPrice + memoryPrice + storagePrice + osPrice + monitorPrice;
+    }
+</script>
+
+</body>
+</html>
